@@ -8,6 +8,19 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
+var types = Assembly.GetExecutingAssembly().GetTypes();
+var serviceTypes = types
+            .Where(t => t.IsClass && !t.IsAbstract && t.Name.EndsWith("Service"));
+// Register each service type
+foreach (var serviceType in serviceTypes) {
+    var interfaceType = types.FirstOrDefault(t => t.IsInterface && t.Name == "I" + serviceType.Name);
+    // Register as a transient service
+    if (interfaceType != null) {
+        builder.Services.AddTransient(interfaceType, serviceType);
+    }
+}
+
+
 builder.Services.AddDbContext<ApplicationDbContext>(
         options => options.UseSqlServer(builder.Configuration.GetConnectionString("DbString"))
     );
@@ -20,20 +33,6 @@ if (!app.Environment.IsDevelopment()) {
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
-var types = Assembly.GetExecutingAssembly().GetTypes();
-var serviceTypes = types
-            .Where(t => t.IsClass && !t.IsAbstract && t.Name.EndsWith("Service"));
-// Register each service type
-foreach (var serviceType in serviceTypes) {
-    var interfaceType = types.FirstOrDefault(t => t.IsInterface && t.Name == "I" + serviceType.Name);
-    // Register as a transient service
-    if(interfaceType != null) {
-        builder.Services.AddTransient(interfaceType, serviceType);
-    } 
-}
-
-
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 

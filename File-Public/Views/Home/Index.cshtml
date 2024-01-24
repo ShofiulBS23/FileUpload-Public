@@ -5,7 +5,106 @@
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
 
-    <button class="btn btn-outline-info text-capitalize">Download a file</button>
-    <button class="btn btn-outline-primary text-capitalize">Download multiple files</button>
+    <a class="btn btn-outline-info text-capitalize" id="one-file-button" onclick="getOneFile(event)">Download a file</a>
+    <a class="btn btn-outline-primary text-capitalize" id="multi-files-button" onclick="getMultiFiles(event)">Download multiple files</a>
     
 </div>
+
+@section Scripts{
+    <script>
+
+        const getMultiFiles = () => {
+            //const url = '/Home/GetFiles?clientid=C909D224-AA65-4923-93DB-8D598459969A&type=KID';
+            const url = '/Home/GetFilesFromFrontEnd?clientid=C909D224-AA65-4923-93DB-8D598459969A&type=KID';
+            var myButton = document.getElementById('multi-files-button');
+
+            // Assign the attribute
+            // myButton.setAttribute('href', url);
+            // myButton.setAttribute('target', '_blank');
+            // myButton.click();
+
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(parts => {
+                    // Iterate through each part and initiate download
+                    parts.forEach(part => {
+                        const headers = part.headers.reduce((acc, header) => {
+                            acc[header.key] = header.value[0];
+                            return acc;
+                        }, {});
+
+                        const blob = new Blob([], { type: headers['Content-Type'] });
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = headers['Content-Disposition'].match(/filename="(.+)"/)[1];
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+
+
+        }
+
+        const getOneFile = (e) => {
+            const url = '/Home/GetFilesFromFrontEnd?clientid=C909D224-AA65-4923-93DB-8D598459969A&Isin=IE0000EDBVW2&lang=en-KB&type=KID&save=True';
+
+            var myButton = document.getElementById('one-file-button');
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(parts => {
+                    // Iterate through each part and initiate download
+                    parts.forEach(part => {
+                        const headers = part.headers.reduce((acc, header) => {
+                            acc[header.key] = header.value[0];
+                            return acc;
+                        }, {});
+
+                        // Read the content of the part
+                        const content = new Uint8Array(part.body);
+
+                        // Create a Blob with the content and set the appropriate content type
+                        const blob = new Blob([content], { type: headers['Content-Type'] });
+
+                        // Create a download link and trigger the download
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = headers['Content-Disposition'].match(/filename="(.+)"/)[1];
+                        document.body.appendChild(a);
+                        a.click();
+
+                        // Clean up
+                        window.URL.revokeObjectURL(url);
+                        document.body.removeChild(a);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    </script>
+}
