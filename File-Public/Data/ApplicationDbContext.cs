@@ -10,5 +10,6 @@ namespace File_Public.Data
             
         }
         public DbSet<Document> Documents { get; set; }
+        public DbSet<DocTypeLU> DocTypes { get; set; }
     }
 }
