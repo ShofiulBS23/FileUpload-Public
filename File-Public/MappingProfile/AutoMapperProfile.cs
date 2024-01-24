@@ -9,6 +9,9 @@ namespace File_Public.MappingProfile
        public AutoMapperProfile() {
             CreateMap<Document,VmDocument>();
             CreateMap<VmDocument, Document>();
+
+            CreateMap<DocTypeLU, VmDocTypeLU>();
+            CreateMap<VmDocTypeLU, DocTypeLU>();
        }
     }
 }
