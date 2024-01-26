@@ -1,4 +1,5 @@
 using File_Public.Data;
+using File_Public.Extensions;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
@@ -15,7 +16,7 @@ var serviceTypes = types
 foreach (var serviceType in serviceTypes) {
     var interfaceType = types.FirstOrDefault(t => t.IsInterface && t.Name == "I" + serviceType.Name);
     // Register as a transient service
-    if (interfaceType != null) {
+    if (!interfaceType.IsNullOrEmpty()) {
         builder.Services.AddTransient(interfaceType, serviceType);
     }
 }
