@@ -5,6 +5,7 @@ using File_Public.Models;
 using File_Public.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.IO.Compression;
 using System.Text;
 
 namespace File_Public.Services.Implementation
@@ -46,6 +47,67 @@ namespace File_Public.Services.Implementation
 
             var res =  GetFilesFromLocalAsListStorage(files);
             return res;
+        }
+        public async Task<List<VmFileNameAndExtension>> GetFilesStatusAsync(GetFileDto dto)
+        {
+            if(dto.clientid.IsNullOrEmpty() || dto.type.IsNullOrEmpty()) {
+                throw new ArgumentException($"client id or type or both are missing");
+            }
+
+            var type = await _context.DocTypes.FirstOrDefaultAsync(x => x.DocType == dto.type);
+
+            if(type.IsNullOrEmpty()) {
+                throw new ArgumentException($"Provided file type[{dto.type}] is not supported");
+            }
+
+            IQueryable<Document> query = MakeQuery(dto);
+
+            var files = await query.Select(x => new VmFileNameAndExtension {
+                DocName = x.DocName,
+                DocExt = x.DocExt,
+                ClientId = x.ClientId.ToString(),
+                DocType = x.DocType
+            }).ToListAsync();
+
+            return files;
+        }
+        public async Task<byte[]> GetZipBytesArray(GetFileDto dto)
+        {
+            if (dto.clientid.IsNullOrEmpty() || dto.type.IsNullOrEmpty()) {
+                throw new ArgumentException($"client id or type or both are missing");
+            }
+
+            var type = await _context.DocTypes.FirstOrDefaultAsync(x => x.DocType == dto.type);
+
+            if (type.IsNullOrEmpty()) {
+                throw new ArgumentException($"Provided file type[{dto.type}] is not supported");
+            }
+
+            IQueryable<Document> query = MakeQuery(dto);
+
+            var files = await query.Select(x => new VmFileNameAndExtension {
+                DocName = x.DocName,
+                DocExt = x.DocExt,
+                ClientId = x.ClientId.ToString(),
+                DocType = x.DocType
+            }).ToListAsync();
+
+            using (var memoryStream = new MemoryStream()) {
+                using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true)) {
+                    foreach (var file in files) {
+                        string filePath = $"{_baseFilePath}\\{file.ClientId}_{file.DocType}\\{file.DocName}.{file.DocExt}";
+                        var entry = archive.CreateEntry(Path.GetFileName(filePath));
+                        using (var entryStream = entry.Open())
+                        using (var fileStream = new FileStream(filePath, FileMode.Open)) {
+                            fileStream.CopyTo(entryStream);
+                        }
+                    }
+                }
+                var zipBytes = memoryStream.ToArray();
+
+                memoryStream.Dispose();
+                return zipBytes;
+            }
         }
 
         private List<VmFileModel> GetFilesFromLocalAsListStorage(List<VmFileNameAndExtension> fileList)
@@ -97,6 +159,22 @@ namespace File_Public.Services.Implementation
 
             var res =  GetFilesFromLocalStorage(files);
             return res;
+        }
+        public async Task<VmFileStreamAndName> GetFileAsync(VmFileNameAndExtension file)
+        {
+            string path = $"{_baseFilePath}\\{file.ClientId}_{file.DocType}\\{file.DocName}.{file.DocExt}";
+
+            if (Path.Exists(path)) {
+                var fileStream = new FileStream(path, FileMode.Open);
+
+                var dto = new VmFileStreamAndName {
+                    FileStream = fileStream,
+                    Name = Path.GetFileName(path)
+                };
+                return dto;
+            }
+
+            return null;
         }
 
         private MultipartContent GetFilesFromLocalStorage(List<VmFileNameAndExtension> fileList)
