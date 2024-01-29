@@ -1,0 +1,68 @@
+﻿@model List<File_Public.Models.VmFileNameAndExtension>
+@inject IConfiguration _config;
+
+@{
+    string hostName = _config.GetValue<string>("HostInfo:HostName") ?? String.Empty;
+}
+
+<h3 class="text-primary">Available files</h3>
+<p class="text-info">To download the file click on it or use Download(.zip) button to download all of them</p>
+
+<section class="row">
+    <div class="col-md-7">
+        <ul>
+            @{
+                foreach(var item in Model) {
+
+                    string url = $"{hostName}/Home/GetFile?ClientId={item.ClientId}&DocName={item.DocName}&DocType={item.DocType}&DocExt={item.DocExt}";
+                    string fileName = $"{item.DocName}.{item.DocExt}";
+                                <li>
+                                    <a href="@url" target="_blank">@fileName</a>
+                                </li>
+                }
+                if(Model.Count == 0) {
+                                <p>No file available</p>
+                }
+              }
+            
+        </ul>
+    </div>
+    <div class="col-md-5">
+        @if (Model.Count > 0) {
+            <button class="btn btn-primary" onclick="downlaodVm.downloadAll()">Download(.zip)</button>
+        }
+
+    </div>
+</section>
+
+@section Scripts{
+    <script>
+        var downlaodVm = {
+            url: '@hostName/Home/GetFiles',
+
+
+            downloadAll(){
+                let first = true;
+                const urlParams = new URLSearchParams(window.location.search);
+                let params;
+                for (let key of urlParams.keys()) {
+                    if (urlParams.has(key)) {
+                        if (first) {
+                            first = false;
+                            params = '?' + key + '=' +urlParams.get(key);
+                            downlaodVm.url += params
+                        } else {
+                            params = '&' + key + '=' + urlParams.get(key);
+                            downlaodVm.url += params
+                        } 
+                    }
+                }
+                const link = document.createElement('a');
+                link.setAttribute('href', downlaodVm.url);
+                link.setAttribute('target', '_blank');
+
+                link.click();
+            }
+        }
+    </script>
+}

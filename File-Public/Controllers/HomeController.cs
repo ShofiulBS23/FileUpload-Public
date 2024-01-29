@@ -1,13 +1,9 @@
 using File_Public.Data;
-using File_Public.DbModels;
 using File_Public.Extensions;
 using File_Public.Models;
 using File_Public.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
 
 namespace File_Public.Controllers
 {
@@ -40,53 +36,26 @@ namespace File_Public.Controllers
 
         public async Task<IActionResult> GetFileOrZip(GetFileDto dto)
         {
-            if (dto.clientid.IsNullOrEmpty() || dto.type.IsNullOrEmpty()) {
-               return BadRequest($"client id or type or both are missing");
-            }
-
-            var type = await _context.DocTypes.FirstOrDefaultAsync(x => x.DocType == dto.type);
-
-            if (type.IsNullOrEmpty()) {
-                return BadRequest($"Provided file type[{dto.type}] is not supported");
-            }
-
-            IQueryable<Document> query = MakeQuery(dto);
-
-            var files = await query.Select(x => new VmFileNameAndExtension {
-                DocName = x.DocName,
-                DocExt = x.DocExt
-            }).ToListAsync();
+            var files = await _fileStorageService.GetFilesStatusAsync(dto);
 
             if (files.Count == 1) {
-                string filePath = $"{_baseFilePath}\\{files[0].DocName}.{files[0].DocExt}";
+                var file = await _fileStorageService.GetFileAsync(files[0]);
 
-                if (System.IO.File.Exists(filePath)) {
-                    var fileBytes = System.IO.File.ReadAllBytes(filePath);
-
-                    //var fileContent = new ByteArrayContent(fileBytes);
-                    var fileStream = new FileStream(filePath, FileMode.Open);
-                    return File(fileStream, "application/octet-stream", Path.GetFileName(filePath));
+                if (file.IsNullOrEmpty()) {
+                    return NotFound("File not found in local storage");
                 }
+                return File(file.FileStream, "application/octet-stream", file.Name);
             } else if (files.Count > 1) {
-
-                using (var memoryStream = new MemoryStream()) {
-                    using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true)) {
-                        foreach (var file in files) {
-                            string filePath = $"{_baseFilePath}\\{file.DocName}.{file.DocExt}";
-                            var entry = archive.CreateEntry(Path.GetFileName(filePath));
-                            using (var entryStream = entry.Open())
-                            using (var fileStream = new FileStream(filePath, FileMode.Open)) {
-                                fileStream.CopyTo(entryStream);
-                            }
-                        }
-                    }
-                    var zipBytes = memoryStream.ToArray();
-
-                    memoryStream.Dispose();
-                    return File(zipBytes, "application/octet-stream", "multiple_files.zip");
+                    return View(files);
                 }
-            }
             return BadRequest("No file available");
+        }
+
+
+        public async Task<IActionResult> GetFiles(GetFileDto dto)
+        {
+            var zipBytes = await _fileStorageService.GetZipBytesArray(dto);
+            return File(zipBytes, "application/zip", $"{dto.clientid}_{dto.type}.zip");
         }
 
 
@@ -95,7 +64,7 @@ namespace File_Public.Controllers
             MultipartContent multipartContent = await _fileStorageService.GetFilesAsync(dto);
             return new ObjectResult(multipartContent) { StatusCode = 200 };
         }
-        public async Task<IActionResult> GetFiles(GetFileDto dto)
+        public async Task<IActionResult> GetFilesMulti(GetFileDto dto)
         {
             var files = await _fileStorageService.GetFilesAsListAsync(dto);
 
@@ -126,29 +95,6 @@ namespace File_Public.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-
-        private IQueryable<Document> MakeQuery(GetFileDto dto)
-        {
-            var query = _context.Documents.AsQueryable();
-
-            if (!string.IsNullOrEmpty(dto.clientid)) {
-                query = query.Where(d => d.ClientId.ToString() == dto.clientid);
-            }
-
-            if (!string.IsNullOrEmpty(dto.Isin)) {
-                query = query.Where(d => d.ISIN == dto.Isin);
-            }
-
-            if (!string.IsNullOrEmpty(dto.lang)) {
-                query = query.Where(d => d.Language == dto.lang);
-            }
-
-            if (!string.IsNullOrEmpty(dto.type)) {
-                query = query.Where(d => d.DocType == dto.type);
-            }
-
-            return query;
         }
     }
 }
