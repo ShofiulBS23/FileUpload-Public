@@ -51,6 +51,17 @@ namespace File_Public.Controllers
             return BadRequest("No file available");
         }
 
+        public async Task<IActionResult> GetFile(VmFileNameAndExtension vm)
+        {
+            var file = await _fileStorageService.GetFileAsync(vm);
+
+            if (file.IsNullOrEmpty()) {
+                return NotFound("File not found in local storage");
+            }
+            return File(file.FileStream, "application/octet-stream", file.Name);
+
+        }
+
 
         public async Task<IActionResult> GetFiles(GetFileDto dto)
         {
