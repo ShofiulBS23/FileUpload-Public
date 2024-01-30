@@ -86,7 +86,7 @@ namespace File_Public.Services.Implementation
         {
             try {
                 if (dto.clientid.IsNullOrEmpty()) {
-                    throw new ArgumentException($"client id is required");
+                    throw new ArgumentException($"Client id is required");
                 }
                 if (dto.type.IsNullOrEmpty()) {
                     throw new ArgumentException($"Doc type is required");
