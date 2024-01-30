@@ -5,11 +5,19 @@
     string hostName = _config.GetValue<string>("HostInfo:HostName") ?? String.Empty;
 }
 
+
+<style>
+    .copy-link-button:focus{
+        outline: none;
+        box-shadow: none;
+    }
+</style>
+
 <h3 class="text-primary">Available files</h3>
 <p class="text-info">To download the file click on it or use Download(.zip) button to download all of them</p>
 
 <section class="row">
-    <div class="col-md-7">
+    <div class="col-md-7 col-12">
         <ul>
             @{
                 foreach(var item in Model) {
@@ -18,16 +26,18 @@
                     string fileName = $"{item.DocName}.{item.DocExt}";
                                 <li>
                                     <a href="@url" target="_blank">@fileName</a>
+                                    <button class="btn copy-link-button" onclick="downlaodVm.copyLink(event)"> Copy Link </button>
+                                    <span class="text-info mt-2"></span>
                                 </li>
                 }
                 if(Model.Count == 0) {
-                                <p>No file available</p>
+                      <p>No file available</p>
                 }
               }
             
         </ul>
     </div>
-    <div class="col-md-5">
+    <div class="col-md-5 col-12">
         @if (Model.Count > 0) {
             <button class="btn btn-primary" onclick="downlaodVm.downloadAll()">Download(.zip)</button>
         }
@@ -40,6 +50,22 @@
         var downlaodVm = {
             url: '@hostName/Home/GetFiles',
 
+            copyLink(e){
+                const siblings = $(e.target).siblings();
+                const anchorTag = siblings.first();
+                const info = siblings.last();
+                const link = anchorTag.attr('href');
+                navigator.clipboard.writeText(link)
+                    .then(() => {
+                        info.text('Link copied');
+                        setTimeout(() => {
+                            info.text('');
+                        }, 500);
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy link: ', err);
+                    });
+            },
 
             downloadAll(){
                 let first = true;

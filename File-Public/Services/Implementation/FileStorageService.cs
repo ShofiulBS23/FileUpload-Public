@@ -162,6 +162,12 @@ namespace File_Public.Services.Implementation
         }
         public async Task<VmFileStreamAndName> GetFileAsync(VmFileNameAndExtension file)
         {
+            var type = await _context.DocTypes.FirstOrDefaultAsync(x => x.DocType == file.DocType);
+
+            if (type.IsNullOrEmpty() || file.ClientId.IsNullOrEmpty()) {
+                return null;
+            }
+
             string path = $"{_baseFilePath}\\{file.ClientId}_{file.DocType}\\{file.DocName}.{file.DocExt}";
 
             if (Path.Exists(path)) {
