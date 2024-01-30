@@ -104,14 +104,19 @@ namespace File_Public.Services.Implementation
                     DocName = x.DocName,
                     DocExt = x.DocExt,
                     ClientId = x.ClientId.ToString(),
-                    DocType = x.DocType
+                    DocType = x.DocType,
+                    Isin = x.ISIN,
+                    Language = x.Language
                 }).ToListAsync();
 
                 using (var memoryStream = new MemoryStream()) {
                     using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true)) {
                         foreach (var file in files) {
-                            string filePath = $"{_baseFilePath}\\{file.ClientId}\\{file.DocType}\\{file.DocName}.{file.DocExt}";
-                            var entry = archive.CreateEntry(Path.GetFileName(filePath));
+                            string fileName = $"{file.Isin}_{file.Language}_{file.DocType}.{file.DocExt}";
+
+                            string filePath = $"{_baseFilePath}\\{file.ClientId}\\{file.DocType}\\{fileName}";
+                            //var entry = archive.CreateEntry(Path.GetFileName(filePath));
+                            var entry = archive.CreateEntry(fileName);
                             using (var entryStream = entry.Open())
                             using (var fileStream = new FileStream(filePath, FileMode.Open)) {
                                 fileStream.CopyTo(entryStream);
@@ -192,14 +197,16 @@ namespace File_Public.Services.Implementation
                     throw new Exception($"Invalid doc type[{file.DocType}]!");
                 }
 
-                string path = $"{_baseFilePath}\\{file.ClientId}\\{file.DocType}\\{file.DocName}.{file.DocExt}";
+                string fileName = $"{file.Isin}_{file.Language}_{file.DocType}.{file.DocExt}";
+
+                string path = $"{_baseFilePath}\\{file.ClientId}\\{file.DocType}\\{fileName}";
 
                 if (Path.Exists(path)) {
                     var fileStream = new FileStream(path, FileMode.Open);
 
                     var dto = new VmFileStreamAndName {
                         FileStream = fileStream,
-                        Name = Path.GetFileName(path)
+                        Name = fileName
                     };
                     return dto;
                 }
