@@ -36,37 +36,44 @@ namespace File_Public.Controllers
 
         public async Task<IActionResult> GetFileOrZip(GetFileDto dto)
         {
-            var files = await _fileStorageService.GetFilesStatusAsync(dto);
+            try {
+                var files = await _fileStorageService.GetFilesStatusAsync(dto);
 
-            if (files.Count == 1) {
-                var file = await _fileStorageService.GetFileAsync(files[0]);
-
-                if (file.IsNullOrEmpty()) {
-                    return NotFound("File not found in local storage");
-                }
-                return File(file.FileStream, "application/octet-stream", file.Name);
-            } else if (files.Count > 1) {
+                if (files.Count == 1) {
+                    var file = await _fileStorageService.GetFileAsync(files[0]);
+                    return File(file.FileStream, "application/octet-stream", file.Name);
+                } else if (files.Count > 1) {
                     return View(files);
                 }
-            return BadRequest("No file available");
+                return BadRequest("No file available");
+            }catch(Exception ex) {
+                return BadRequest(ex.Message);
+            }
+           
         }
 
         public async Task<IActionResult> GetFile(VmFileNameAndExtension vm)
         {
-            var file = await _fileStorageService.GetFileAsync(vm);
+            try {
 
-            if (file.IsNullOrEmpty()) {
-                return NotFound("File not found in local storage");
+                var file = await _fileStorageService.GetFileAsync(vm);
+                return File(file.FileStream, "application/octet-stream", file.Name);
+            }catch(Exception ex) {
+                return BadRequest(ex.Message);
             }
-            return File(file.FileStream, "application/octet-stream", file.Name);
 
         }
 
 
         public async Task<IActionResult> GetFiles(GetFileDto dto)
         {
-            var zipBytes = await _fileStorageService.GetZipBytesArray(dto);
-            return File(zipBytes, "application/zip", $"{dto.clientid}_{dto.type}.zip");
+            try {
+                var zipBytes = await _fileStorageService.GetZipBytesArray(dto);
+                return File(zipBytes, "application/zip", $"{dto.clientid}_{dto.type}.zip");
+            }catch(Exception ex) {
+                return BadRequest(ex.Message);
+            }
+            
         }
 
 
