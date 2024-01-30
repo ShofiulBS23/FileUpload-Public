@@ -11,6 +11,11 @@
         outline: none;
         box-shadow: none;
     }
+
+    .fa-copy:hover::before{
+        content: "Copy Link";
+        font-size: 10px;
+    }
 </style>
 
 <h3 class="text-primary">Available files</h3>
@@ -22,11 +27,11 @@
             @{
                 foreach(var item in Model) {
 
-                    string url = $"{hostName}/Home/GetFile?ClientId={item.ClientId}&DocName={item.DocName}&DocType={item.DocType}&DocExt={item.DocExt}";
+                    string url = $"{hostName}/Home/GetFile?ClientId={item.ClientId}&DocName={item.DocName}&DocType={item.DocType}&DocExt={item.DocExt}&isin={item.Isin}&Language={item.Language}";
                     string fileName = $"{item.DocName}.{item.DocExt}";
                                 <li>
                                     <a href="@url" target="_blank">@fileName</a>
-                                    <button class="btn copy-link-button" onclick="downlaodVm.copyLink(event)"> Copy Link </button>
+                                    <button class="btn copy-link-button" onclick="downlaodVm.copyLink(event)"><i class="fa-regular fa-copy"></i></button>
                                     <span class="text-info mt-2"></span>
                                 </li>
                 }
@@ -51,7 +56,7 @@
             url: '@hostName/Home/GetFiles',
 
             copyLink(e){
-                const siblings = $(e.target).siblings();
+                const siblings = $(e.target).parent().siblings();
                 const anchorTag = siblings.first();
                 const info = siblings.last();
                 const link = anchorTag.attr('href');
