@@ -27,8 +27,8 @@
             @{
                 foreach(var item in Model) {
 
-                    string url = $"{hostName}/Home/GetFile?ClientId={item.ClientId}&DocName={item.DocName}&DocType={item.DocType}&DocExt={item.DocExt}&isin={item.Isin}&Language={item.Language}";
-                    string fileName = $"{item.Isin}_{item.Language}_{item.DocType}.{item.DocExt}";
+                    string url = $"{hostName}/Home/GetFile?ClientId={item.ClientId}&DocName={item.DocName}&DocType={item.DocGroup}&DocExt={item.DocExt}&isin={item.Isin}&Language={item.Language}";
+                    string fileName = $"{item.Isin}_{item.Language}_{item.DocGroup}.{item.DocExt}";
                                 <li>
                                     <a href="@url" target="_blank"><i class="fa fa-download"></i>@fileName</a>
                                     <button class="btn copy-link-button" onclick="downlaodVm.copyLink(event)"><i class="fa-regular fa-copy"></i></button>

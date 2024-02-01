@@ -10,8 +10,8 @@ namespace File_Public.MappingProfile
             CreateMap<Document,VmDocument>();
             CreateMap<VmDocument, Document>();
 
-            CreateMap<DocTypeLU, VmDocTypeLU>();
-            CreateMap<VmDocTypeLU, DocTypeLU>();
+            CreateMap<DocGroupLU, VmDocGroupLU>();
+            CreateMap<VmDocGroupLU, DocGroupLU>();
        }
     }
 }

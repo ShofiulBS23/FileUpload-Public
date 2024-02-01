@@ -2,12 +2,12 @@
 
 namespace File_Public.Models
 {
-    public class VmDocTypeLU
+    public class VmDocGroupLU
     {
         public int DocTypeID { get; set; }
 
         [Required]
         [StringLength(20)]
-        public string DocType { get; set; }
+        public string DocGroup { get; set; }
     }
 }
