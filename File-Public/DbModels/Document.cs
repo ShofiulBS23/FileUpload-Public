@@ -20,10 +20,9 @@ namespace File_Public.DbModels
 
         [Required]
         [StringLength(20)]
-        public string DocType { get; set; }
+        public string DocGroup { get; set; }
 
         [Required]
-        [StringLength(20)]
         public DateTime DocDate { get; set; }
 
         [Required]

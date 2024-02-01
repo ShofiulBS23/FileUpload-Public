@@ -32,7 +32,7 @@ namespace File_Public.Services.Implementation
                 throw new ArgumentException($"client id or type or both are missing");
             }
 
-            var type = await _context.DocTypes.FirstOrDefaultAsync(x => x.DocType == dto.type);
+            var type = await _context.DocGroups.FirstOrDefaultAsync(x => x.DocGroup == dto.type);
 
             if(type.IsNullOrEmpty()) {
                 throw new ArgumentException($"Provided file type[{dto.type}] is not supported");
@@ -59,7 +59,7 @@ namespace File_Public.Services.Implementation
                     throw new ArgumentException("Doc type is required");
                 }
 
-                var type = await _context.DocTypes.FirstOrDefaultAsync(x => x.DocType == dto.type);
+                var type = await _context.DocGroups.FirstOrDefaultAsync(x => x.DocGroup == dto.type);
 
                 if (type.IsNullOrEmpty()) {
                     throw new ArgumentException($"Provided file type[{dto.type}] is not supported");
@@ -71,7 +71,7 @@ namespace File_Public.Services.Implementation
                     DocName = x.DocName,
                     DocExt = x.DocExt,
                     ClientId = x.ClientId.ToString(),
-                    DocType = x.DocType,
+                    DocGroup = x.DocGroup,
                     Isin = x.ISIN,
                     Language = x.Language
                 }).ToListAsync();
@@ -92,7 +92,7 @@ namespace File_Public.Services.Implementation
                     throw new ArgumentException($"Doc type is required");
                 }
 
-                var type = await _context.DocTypes.FirstOrDefaultAsync(x => x.DocType == dto.type);
+                var type = await _context.DocGroups.FirstOrDefaultAsync(x => x.DocGroup == dto.type);
 
                 if (type.IsNullOrEmpty()) {
                     throw new ArgumentException($"Provided file type[{dto.type}] is not supported");
@@ -104,7 +104,7 @@ namespace File_Public.Services.Implementation
                     DocName = x.DocName,
                     DocExt = x.DocExt,
                     ClientId = x.ClientId.ToString(),
-                    DocType = x.DocType,
+                    DocGroup = x.DocGroup,
                     Isin = x.ISIN,
                     Language = x.Language
                 }).ToListAsync();
@@ -112,9 +112,9 @@ namespace File_Public.Services.Implementation
                 using (var memoryStream = new MemoryStream()) {
                     using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true)) {
                         foreach (var file in files) {
-                            string fileName = $"{file.Isin}_{file.Language}_{file.DocType}.{file.DocExt}";
+                            string fileName = $"{file.Isin}_{file.Language}_{file.DocGroup}.{file.DocExt}";
 
-                            string filePath = $"{_baseFilePath}\\{file.ClientId}\\{file.DocType}\\{fileName}";
+                            string filePath = $"{_baseFilePath}\\{file.ClientId}\\{file.DocGroup}\\{fileName}";
                             //var entry = archive.CreateEntry(Path.GetFileName(filePath));
                             var entry = archive.CreateEntry(fileName);
                             using (var entryStream = entry.Open())
@@ -168,7 +168,7 @@ namespace File_Public.Services.Implementation
                 throw new ArgumentException($"client id or type or both are missing");
             }
 
-            var type = await _context.DocTypes.FirstOrDefaultAsync(x => x.DocType == dto.type);
+            var type = await _context.DocGroups.FirstOrDefaultAsync(x => x.DocGroup == dto.type);
 
             if(type.IsNullOrEmpty()) {
                 throw new ArgumentException($"Provided file type[{dto.type}] is not supported");
@@ -191,15 +191,15 @@ namespace File_Public.Services.Implementation
                     throw new Exception("Client id is required");
                 }
 
-                var type = await _context.DocTypes.FirstOrDefaultAsync(x => x.DocType == file.DocType);
+                var type = await _context.DocGroups.FirstOrDefaultAsync(x => x.DocGroup == file.DocGroup);
 
                 if (type.IsNullOrEmpty()) {
-                    throw new Exception($"Invalid doc type[{file.DocType}]!");
+                    throw new Exception($"Invalid doc type[{file.DocGroup}]!");
                 }
 
-                string fileName = $"{file.Isin}_{file.Language}_{file.DocType}.{file.DocExt}";
+                string fileName = $"{file.Isin}_{file.Language}_{file.DocName}.{file.DocExt}";
 
-                string path = $"{_baseFilePath}\\{file.ClientId}\\{file.DocType}\\{fileName}";
+                string path = $"{_baseFilePath}\\{file.ClientId}\\{file.DocGroup}\\{fileName}";
 
                 if (Path.Exists(path)) {
                     var fileStream = new FileStream(path, FileMode.Open);
@@ -278,7 +278,7 @@ namespace File_Public.Services.Implementation
             }
 
             if (!dto.type.IsNullOrEmpty()) {
-                query = query.Where(d => d.DocType == dto.type);
+                query = query.Where(d => d.DocGroup == dto.type);
             }
 
             return query;
