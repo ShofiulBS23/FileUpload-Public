@@ -1,4 +1,6 @@
-﻿namespace File_Public.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace File_Public.Models
 {
     public class VmFileNameAndExtension
     {
@@ -6,6 +8,7 @@
         public string DocExt { get; set; }
         public string ClientId { get; set; }
         public string DocGroup { get; set; }
+        public DateTime DocDate { get; set; }
         public string Isin { get; set; }
         public string Language { get; set; }
     }

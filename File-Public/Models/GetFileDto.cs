@@ -10,6 +10,9 @@ namespace File_Public.Models
         public string lang { get; set; }
         [Required]
         public string type { get; set; }
+        public DateTime? DocDate { get; set; }
+        public string DocName { get; set; }
+        public string DocExt { get; set; }
         public bool? save { get; set; }
     }
 }
