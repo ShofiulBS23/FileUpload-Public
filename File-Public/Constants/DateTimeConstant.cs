@@ -2,6 +2,6 @@
 {
     public static class DateTimeConstant
     {
-        public const string DateTimeFormat = "dd-MM-YYYY";
+        public const string DateTimeFormat = "dd-MM-yyyy";
     }
 }
