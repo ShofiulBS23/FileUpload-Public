@@ -37,15 +37,22 @@ namespace File_Public.Controllers
         public async Task<IActionResult> GetFileOrZip(GetFileDto dto)
         {
             try {
-                var files = await _fileStorageService.GetFilesStatusAsync(dto);
+                if (ModelState.IsValid) {
+                    var files = await _fileStorageService.GetFilesStatusAsync(dto);
 
-                if (files.Count == 1) {
-                    var file = await _fileStorageService.GetFileAsync(files[0]);
-                    return File(file.FileStream, "application/octet-stream", file.Name);
-                } else if (files.Count > 1) {
-                    return View(files);
+                    if (files.Count == 1) {
+                        var file = await _fileStorageService.GetFileAsync(files[0]);
+                        return File(file.FileStream, "application/octet-stream", file.Name);
+                    } else if (files.Count > 1) {
+                        return View(files);
+                    }
+                    return BadRequest("No File available");
                 }
-                return BadRequest("No file available");
+                var invalidProperties = ModelState
+                                        .Where(x => x.Value.Errors.Any())
+                                        .Select(x => new { Property = x.Key, Errors = x.Value.Errors.Select(e => e.ErrorMessage) })
+                                        .ToList();
+                return BadRequest(invalidProperties);
             }catch(Exception ex) {
                 return BadRequest(ex.Message);
             }
@@ -55,10 +62,16 @@ namespace File_Public.Controllers
         public async Task<IActionResult> GetFile(VmFileNameAndExtension vm)
         {
             try {
-
-                var file = await _fileStorageService.GetFileAsync(vm);
-                return File(file.FileStream, "application/octet-stream", file.Name);
-            }catch(Exception ex) {
+                if (ModelState.IsValid) {
+                    var file = await _fileStorageService.GetFileAsync(vm);
+                    return File(file.FileStream, "application/octet-stream", file.Name);
+                }
+                var invalidProperties = ModelState
+                                        .Where(x => x.Value.Errors.Any())
+                                        .Select(x => new { Property = x.Key, Errors = x.Value.Errors.Select(e => e.ErrorMessage) })
+                                        .ToList();
+                return BadRequest(invalidProperties);
+            } catch(Exception ex) {
                 return BadRequest(ex.Message);
             }
 
@@ -69,7 +82,7 @@ namespace File_Public.Controllers
         {
             try {
                 var zipBytes = await _fileStorageService.GetZipBytesArray(dto);
-                return File(zipBytes, "application/zip", $"{dto.clientid}_{dto.type}.zip");
+                return File(zipBytes, "application/zip", $"{dto.ClientId}_{dto.DocGroup}.zip");
             }catch(Exception ex) {
                 return BadRequest(ex.Message);
             }
