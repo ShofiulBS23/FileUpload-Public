@@ -1,9 +1,5 @@
 ﻿@model List<File_Public.Models.VmFileNameAndExtension>
-@inject IConfiguration _config;
 @using File_Public.Constants;
-@{
-    string hostName = _config.GetValue<string>("HostInfo:HostName") ?? String.Empty;
-}
 
 
 <style>
@@ -26,7 +22,7 @@
         <ul>
             @{
                 foreach(var item in Model) {
-                    string url = $"{hostName}/Home/GetFile?ClientId={Uri.EscapeDataString(item.ClientId)}&DocName={Uri.EscapeDataString(item.DocName)}&DocGroup={Uri.EscapeDataString(item.DocGroup)}&DocExt={Uri.EscapeDataString(item.DocExt)}&isin={Uri.EscapeDataString(item.Isin)}&Language={Uri.EscapeDataString(item.Language)}&DocDate={Uri.EscapeDataString(item.DocDate.ToString())}";
+                    string url = $"/Home/GetFile?ClientId={Uri.EscapeDataString(item.ClientId)}&DocName={Uri.EscapeDataString(item.DocName)}&DocGroup={Uri.EscapeDataString(item.DocGroup)}&DocExt={Uri.EscapeDataString(item.DocExt)}&isin={Uri.EscapeDataString(item.Isin)}&Language={Uri.EscapeDataString(item.Language)}&DocDate={Uri.EscapeDataString(item.DocDate.ToString())}";
 
                     string fileName = $"{item.Isin}_{item.Language}_{item.DocGroup}.{item.DocExt}";
                                 <li>
@@ -53,7 +49,7 @@
 @section Scripts{
     <script>
         var downlaodVm = {
-            url: '@hostName/Home/GetFiles',
+            url: '/Home/GetFiles',
             isCopying: false,
 
             copyLink(e){
@@ -64,7 +60,7 @@
                 const siblings = $(e.target).parent().siblings();
                 const anchorTag = siblings.first();
                 const info = siblings.last();
-                const link = anchorTag.attr('href');
+                const link = window.location.origin + anchorTag.attr('href');
                 navigator.clipboard.writeText(link)
                     .then(() => {
                         info.text('Link copied');
@@ -96,7 +92,7 @@
                     }
                 }
                 const link = document.createElement('a');
-                link.setAttribute('href', downlaodVm.url);
+                link.setAttribute('href', window.location.origin + downlaodVm.url);
                 link.setAttribute('target', '_blank');
 
                 link.click();
