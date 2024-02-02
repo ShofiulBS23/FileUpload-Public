@@ -32,5 +32,8 @@ namespace File_Public.Models
         [Required]
         [StringLength(10)]
         public string DocExt { get; set; }
+
+        [Required]
+        public DateTime UploadDate { get; set; }
     }
 }

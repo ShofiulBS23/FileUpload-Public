@@ -1,4 +1,6 @@
-﻿using File_Public.Data;
+﻿using AutoMapper;
+using File_Public.Constants;
+using File_Public.Data;
 using File_Public.DbModels;
 using File_Public.Extensions;
 using File_Public.Models;
@@ -15,14 +17,17 @@ namespace File_Public.Services.Implementation
         private readonly ApplicationDbContext _context;
         private readonly IConfiguration _configuration;
         private readonly string _baseFilePath;
+        private readonly IMapper _mapper;
 
         public FileStorageService(
             ApplicationDbContext context,
-            IConfiguration configuration
+            IConfiguration configuration,
+            IMapper mappper
         )
         {
             _context = context;
             _configuration = configuration;
+            _mapper = mappper;
 
             _baseFilePath = _configuration.GetSection("FileStorage").GetValue<string>("FileLocation") ?? String.Empty;
         }
@@ -73,7 +78,8 @@ namespace File_Public.Services.Implementation
                     ClientId = x.ClientId.ToString(),
                     DocGroup = x.DocGroup,
                     Isin = x.ISIN,
-                    Language = x.Language
+                    Language = x.Language,
+                    DocDate  = x.DocDate
                 }).ToListAsync();
 
                 return files;
@@ -197,21 +203,33 @@ namespace File_Public.Services.Implementation
                     throw new Exception($"Invalid doc type[{file.DocGroup}]!");
                 }
 
-                string fileName = $"{file.Isin}_{file.Language}_{file.DocName}.{file.DocExt}";
+                
+                
+                IQueryable<Document> query = MakeQuery(_mapper.Map<GetFileDto>(file));
+                var fileDetails = await query.OrderByDescending(x => x.UploadDate).FirstOrDefaultAsync();
+                
 
-                string path = $"{_baseFilePath}\\{file.ClientId}\\{file.DocGroup}\\{fileName}";
+                if (!fileDetails.IsNullOrEmpty()) {
+                    //string fileName = $"{file.Isin}_{file.Language}_{file.DocName}.{file.DocExt}";
+                    string fileName = $"{fileDetails.DocName}.{fileDetails.DocExt}";
 
-                if (Path.Exists(path)) {
-                    var fileStream = new FileStream(path, FileMode.Open);
+                    string path = $"{_baseFilePath}\\{fileDetails.ClientId}\\{fileDetails.DocGroup}\\{fileDetails.DocDate.ToString(DateTimeConstant.DateTimeFormat)}\\{fileName}";
 
-                    var dto = new VmFileStreamAndName {
-                        FileStream = fileStream,
-                        Name = fileName
-                    };
-                    return dto;
+
+                    if (Path.Exists(path)) {
+                        var fileStream = new FileStream(path, FileMode.Open);
+
+                        var dto = new VmFileStreamAndName {
+                            FileStream = fileStream,
+                            Name = fileName
+                        };
+                        return dto;
+                    }
+
+                    throw new Exception("No file found in the local storage!");
                 }
+                throw new Exception("No file found in the database!");
 
-                throw new Exception("No file found in the local storage!");
             } catch(Exception ex) {
                 throw ex;
             }
@@ -279,6 +297,18 @@ namespace File_Public.Services.Implementation
 
             if (!dto.type.IsNullOrEmpty()) {
                 query = query.Where(d => d.DocGroup == dto.type);
+            }
+
+            if (!dto.DocName.IsNullOrEmpty()) {
+                query = query.Where(d => d.DocName == dto.DocName);
+            }
+
+            if (!dto.DocExt.IsNullOrEmpty()) {
+                query = query.Where(d => d.DocExt == dto.DocExt);
+            }
+
+            if (dto.DocDate.HasValue) {
+                query = query.Where(d => d.DocDate == dto.DocDate);
             }
 
             return query;

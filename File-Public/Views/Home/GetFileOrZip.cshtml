@@ -1,6 +1,6 @@
 ﻿@model List<File_Public.Models.VmFileNameAndExtension>
 @inject IConfiguration _config;
-
+@using File_Public.Constants;
 @{
     string hostName = _config.GetValue<string>("HostInfo:HostName") ?? String.Empty;
 }
@@ -27,7 +27,7 @@
             @{
                 foreach(var item in Model) {
 
-                    string url = $"{hostName}/Home/GetFile?ClientId={item.ClientId}&DocName={item.DocName}&DocType={item.DocGroup}&DocExt={item.DocExt}&isin={item.Isin}&Language={item.Language}";
+                    string url = $"{hostName}/Home/GetFile?ClientId={item.ClientId}&DocName={item.DocName}&DocType={item.DocGroup}&DocExt={item.DocExt}&isin={item.Isin}&Language={item.Language}&DocDate={item.DocDate.ToString(DateTimeConstant.DateTimeFormat)}";
                     string fileName = $"{item.Isin}_{item.Language}_{item.DocGroup}.{item.DocExt}";
                                 <li>
                                     <a href="@url" target="_blank"><i class="fa fa-download"></i>@fileName</a>
