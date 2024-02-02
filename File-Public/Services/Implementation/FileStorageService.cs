@@ -120,7 +120,7 @@ namespace File_Public.Services.Implementation
                     using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true)) {
                         foreach (var file in files) {
                             //string fileName = $"{file.Isin}_{file.Language}_{file.DocGroup}.{file.DocExt}";
-                            string fileName = $"{file.DocName}.{file.DocExt}";
+                            string fileName = $"{file.DocName}_{file.Language}.{file.DocExt}";
 
                             string filePath = $"{_baseFilePath}\\{file.ClientId}\\{file.DocGroup}\\{file.DocDate.ToString(DateTimeConstant.DateTimeFormat)}\\{fileName}";
                             //var entry = archive.CreateEntry(Path.GetFileName(filePath));
@@ -214,7 +214,7 @@ namespace File_Public.Services.Implementation
 
                 if (!fileDetails.IsNullOrEmpty()) {
                     //string fileName = $"{file.Isin}_{file.Language}_{file.DocName}.{file.DocExt}";
-                    string fileName = $"{fileDetails.DocName}.{fileDetails.DocExt}";
+                    string fileName = $"{fileDetails.DocName}_{fileDetails.Language}.{fileDetails.DocExt}";
 
                     string path = $"{_baseFilePath}\\{fileDetails.ClientId}\\{fileDetails.DocGroup}\\{fileDetails.DocDate.ToString(DateTimeConstant.DateTimeFormat)}\\{fileName}";
 
