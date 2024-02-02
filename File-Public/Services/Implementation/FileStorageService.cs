@@ -6,9 +6,7 @@ using File_Public.Extensions;
 using File_Public.Models;
 using File_Public.Services.Interface;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 using System.IO.Compression;
-using System.Text;
 
 namespace File_Public.Services.Implementation
 {
@@ -64,10 +62,16 @@ namespace File_Public.Services.Implementation
                     throw new ArgumentException("Doc type is required");
                 }
 
+                var client = await _context.Documents.FirstOrDefaultAsync(x => x.ClientId.ToString() == dto.ClientId);
+
+                if (client.IsNullOrEmpty()) {
+                    throw new ArgumentException($"Client id[{dto.ClientId}] has no document in the server!");
+                }
+
                 var type = await _context.DocGroups.FirstOrDefaultAsync(x => x.DocGroup == dto.DocGroup);
 
                 if (type.IsNullOrEmpty()) {
-                    throw new ArgumentException($"Provided file type[{dto.DocGroup}] is not supported");
+                    throw new ArgumentException($"Provided document group[{dto.DocGroup}] is not supported!");
                 }
 
                 IQueryable<Document> query = MakeQuery(dto);
