@@ -33,14 +33,14 @@ namespace File_Public.Services.Implementation
         }
         public async Task<List<VmFileModel>> GetFilesAsListAsync(GetFileDto dto)
         {
-            if(dto.clientid.IsNullOrEmpty() || dto.type.IsNullOrEmpty()) {
+            if(dto.ClientId.IsNullOrEmpty() || dto.DocGroup.IsNullOrEmpty()) {
                 throw new ArgumentException($"client id or type or both are missing");
             }
 
-            var type = await _context.DocGroups.FirstOrDefaultAsync(x => x.DocGroup == dto.type);
+            var type = await _context.DocGroups.FirstOrDefaultAsync(x => x.DocGroup == dto.DocGroup);
 
             if(type.IsNullOrEmpty()) {
-                throw new ArgumentException($"Provided file type[{dto.type}] is not supported");
+                throw new ArgumentException($"Provided file type[{dto.DocGroup}] is not supported");
             }
 
             IQueryable<Document> query = MakeQuery(dto);
@@ -56,18 +56,18 @@ namespace File_Public.Services.Implementation
         public async Task<List<VmFileNameAndExtension>> GetFilesStatusAsync(GetFileDto dto)
         {
             try {
-                if (dto.clientid.IsNullOrEmpty()) {
+                if (dto.ClientId.IsNullOrEmpty()) {
                     throw new ArgumentException($"Client id is required");
                 }
 
-                if (dto.type.IsNullOrEmpty()) {
+                if (dto.DocGroup.IsNullOrEmpty()) {
                     throw new ArgumentException("Doc type is required");
                 }
 
-                var type = await _context.DocGroups.FirstOrDefaultAsync(x => x.DocGroup == dto.type);
+                var type = await _context.DocGroups.FirstOrDefaultAsync(x => x.DocGroup == dto.DocGroup);
 
                 if (type.IsNullOrEmpty()) {
-                    throw new ArgumentException($"Provided file type[{dto.type}] is not supported");
+                    throw new ArgumentException($"Provided file type[{dto.DocGroup}] is not supported");
                 }
 
                 IQueryable<Document> query = MakeQuery(dto);
@@ -91,17 +91,17 @@ namespace File_Public.Services.Implementation
         public async Task<byte[]> GetZipBytesArray(GetFileDto dto)
         {
             try {
-                if (dto.clientid.IsNullOrEmpty()) {
+                if (dto.ClientId.IsNullOrEmpty()) {
                     throw new ArgumentException($"Client id is required");
                 }
-                if (dto.type.IsNullOrEmpty()) {
+                if (dto.DocGroup.IsNullOrEmpty()) {
                     throw new ArgumentException($"Doc type is required");
                 }
 
-                var type = await _context.DocGroups.FirstOrDefaultAsync(x => x.DocGroup == dto.type);
+                var type = await _context.DocGroups.FirstOrDefaultAsync(x => x.DocGroup == dto.DocGroup);
 
                 if (type.IsNullOrEmpty()) {
-                    throw new ArgumentException($"Provided file type[{dto.type}] is not supported");
+                    throw new ArgumentException($"Provided file type[{dto.DocGroup}] is not supported");
                 }
 
                 IQueryable<Document> query = MakeQuery(dto);
@@ -112,17 +112,20 @@ namespace File_Public.Services.Implementation
                     ClientId = x.ClientId.ToString(),
                     DocGroup = x.DocGroup,
                     Isin = x.ISIN,
-                    Language = x.Language
+                    Language = x.Language,
+                    DocDate = x.DocDate
                 }).ToListAsync();
 
                 using (var memoryStream = new MemoryStream()) {
                     using (var archive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true)) {
                         foreach (var file in files) {
-                            string fileName = $"{file.Isin}_{file.Language}_{file.DocGroup}.{file.DocExt}";
+                            //string fileName = $"{file.Isin}_{file.Language}_{file.DocGroup}.{file.DocExt}";
+                            string fileName = $"{file.DocName}.{file.DocExt}";
 
-                            string filePath = $"{_baseFilePath}\\{file.ClientId}\\{file.DocGroup}\\{fileName}";
+                            string filePath = $"{_baseFilePath}\\{file.ClientId}\\{file.DocGroup}\\{file.DocDate.ToString(DateTimeConstant.DateTimeFormat)}\\{fileName}";
                             //var entry = archive.CreateEntry(Path.GetFileName(filePath));
-                            var entry = archive.CreateEntry(fileName);
+                            string fileNameForClient = $"{file.Isin}_{file.Language}_{file.DocGroup}.{file.DocExt}";
+                            var entry = archive.CreateEntry(fileNameForClient);
                             using (var entryStream = entry.Open())
                             using (var fileStream = new FileStream(filePath, FileMode.Open)) {
                                 fileStream.CopyTo(entryStream);
@@ -170,14 +173,14 @@ namespace File_Public.Services.Implementation
 
         public async Task<MultipartContent> GetFilesAsync(GetFileDto dto)
         {
-            if(dto.clientid.IsNullOrEmpty() || dto.type.IsNullOrEmpty()) {
+            if(dto.ClientId.IsNullOrEmpty() || dto.DocGroup.IsNullOrEmpty()) {
                 throw new ArgumentException($"client id or type or both are missing");
             }
 
-            var type = await _context.DocGroups.FirstOrDefaultAsync(x => x.DocGroup == dto.type);
+            var type = await _context.DocGroups.FirstOrDefaultAsync(x => x.DocGroup == dto.DocGroup);
 
             if(type.IsNullOrEmpty()) {
-                throw new ArgumentException($"Provided file type[{dto.type}] is not supported");
+                throw new ArgumentException($"Provided file type[{dto.DocGroup}] is not supported");
             }
 
             IQueryable<Document> query = MakeQuery(dto);
@@ -203,9 +206,9 @@ namespace File_Public.Services.Implementation
                     throw new Exception($"Invalid doc type[{file.DocGroup}]!");
                 }
 
-                
-                
-                IQueryable<Document> query = MakeQuery(_mapper.Map<GetFileDto>(file));
+
+                var queryparams = _mapper.Map<GetFileDto>(file);
+                IQueryable<Document> query = MakeQuery(queryparams);
                 var fileDetails = await query.OrderByDescending(x => x.UploadDate).FirstOrDefaultAsync();
                 
 
@@ -221,7 +224,7 @@ namespace File_Public.Services.Implementation
 
                         var dto = new VmFileStreamAndName {
                             FileStream = fileStream,
-                            Name = fileName
+                            Name = $"{fileDetails.ISIN}_{fileDetails.Language}_{fileDetails.DocGroup}.{fileDetails.DocExt}"
                         };
                         return dto;
                     }
@@ -283,20 +286,20 @@ namespace File_Public.Services.Implementation
         {
             var query = _context.Documents.AsQueryable();
 
-            if (!string.IsNullOrEmpty(dto.clientid)) {
-                query = query.Where(d => d.ClientId.ToString() == dto.clientid);
+            if (!string.IsNullOrEmpty(dto.ClientId)) {
+                query = query.Where(d => d.ClientId.ToString() == dto.ClientId);
             }
 
-            if (!dto.Isin.IsNullOrEmpty()) {
-                query = query.Where(d => d.ISIN == dto.Isin);
+            if (!dto.ISIN.IsNullOrEmpty()) {
+                query = query.Where(d => d.ISIN == dto.ISIN);
             }
 
-            if (!dto.lang.IsNullOrEmpty()) {
-                query = query.Where(d => d.Language == dto.lang);
+            if (!dto.Lang.IsNullOrEmpty()) {
+                query = query.Where(d => d.Language == dto.Lang);
             }
 
-            if (!dto.type.IsNullOrEmpty()) {
-                query = query.Where(d => d.DocGroup == dto.type);
+            if (!dto.DocGroup.IsNullOrEmpty()) {
+                query = query.Where(d => d.DocGroup == dto.DocGroup);
             }
 
             if (!dto.DocName.IsNullOrEmpty()) {

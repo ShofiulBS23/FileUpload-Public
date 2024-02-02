@@ -26,12 +26,12 @@
         <ul>
             @{
                 foreach(var item in Model) {
+                    string url = $"{hostName}/Home/GetFile?ClientId={Uri.EscapeDataString(item.ClientId)}&DocName={Uri.EscapeDataString(item.DocName)}&DocGroup={Uri.EscapeDataString(item.DocGroup)}&DocExt={Uri.EscapeDataString(item.DocExt)}&isin={Uri.EscapeDataString(item.Isin)}&Language={Uri.EscapeDataString(item.Language)}&DocDate={Uri.EscapeDataString(item.DocDate.ToString())}";
 
-                    string url = $"{hostName}/Home/GetFile?ClientId={item.ClientId}&DocName={item.DocName}&DocType={item.DocGroup}&DocExt={item.DocExt}&isin={item.Isin}&Language={item.Language}&DocDate={item.DocDate.ToString(DateTimeConstant.DateTimeFormat)}";
                     string fileName = $"{item.Isin}_{item.Language}_{item.DocGroup}.{item.DocExt}";
                                 <li>
                                     <a href="@url" target="_blank"><i class="fa fa-download"></i>@fileName</a>
-                                    <button class="btn copy-link-button" onclick="downlaodVm.copyLink(event)"><i class="fa-regular fa-copy"></i></button>
+                                    <button class="btn copy-link-button p-0" onclick="return downlaodVm.copyLink(event)"><i class="fa-regular fa-copy d-inline p-2"></i></button>
                                     <span class="text-info mt-2"></span>
                                 </li>
                 }
@@ -54,8 +54,13 @@
     <script>
         var downlaodVm = {
             url: '@hostName/Home/GetFiles',
+            isCopying: false,
 
             copyLink(e){
+                e.stopPropagation();
+                if (downlaodVm.isCopying) return !downlaodVm.isCopying;
+                downlaodVm.isCopying = true;
+
                 const siblings = $(e.target).parent().siblings();
                 const anchorTag = siblings.first();
                 const info = siblings.last();
@@ -65,7 +70,9 @@
                         info.text('Link copied');
                         setTimeout(() => {
                             info.text('');
-                        }, 500);
+                            downlaodVm.isCopying = false;
+                            return !downlaodVm.isCopying;
+                        }, 400);
                     })
                     .catch(err => {
                         console.error('Failed to copy link: ', err);
