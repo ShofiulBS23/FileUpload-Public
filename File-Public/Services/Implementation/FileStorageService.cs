@@ -132,7 +132,7 @@ namespace File_Public.Services.Implementation
                     throw new ArgumentException($"Provided file type[{dto.DocGroup}] is not supported");
                 }
 
-                IQueryable<Document> query = MakeQuery(dto);
+                IQueryable<Document> query = GetQueryForUniqueFiles(dto);
 
                 var files = await query.Select(x => new VmFileNameAndExtension {
                     DocName = x.DocName,
