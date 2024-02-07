@@ -34,7 +34,7 @@ namespace File_Public.Controllers
             return View();
         }
 
-        public async Task<IActionResult> GetFileOrZip(GetFileDto dto)
+        public async Task<IActionResult> GetFileOrView(GetFileDto dto)
         {
             try {
                 if (ModelState.IsValid) {
