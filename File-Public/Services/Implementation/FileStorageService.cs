@@ -6,6 +6,7 @@ using File_Public.Extensions;
 using File_Public.Models;
 using File_Public.Services.Interface;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using System.IO.Compression;
 
 namespace File_Public.Services.Implementation
@@ -74,7 +75,7 @@ namespace File_Public.Services.Implementation
                     throw new ArgumentException($"Provided document group[{dto.DocGroup}] is not supported!");
                 }
 
-                IQueryable<Document> query = MakeQuery(dto);
+                var query = GetQueryForUniqueFiles(dto);
 
                 var files = await query.Select(x => new VmFileNameAndExtension {
                     DocName = x.DocName,
@@ -83,7 +84,7 @@ namespace File_Public.Services.Implementation
                     DocGroup = x.DocGroup,
                     Isin = x.ISIN,
                     Language = x.Language,
-                    DocDate  = x.DocDate
+                    DocDate = x.DocDate
                 }).ToListAsync();
 
                 return files;
@@ -92,6 +93,29 @@ namespace File_Public.Services.Implementation
             }
             
         }
+
+        private IQueryable<Document> GetQueryForUniqueFiles(GetFileDto dto)
+        {
+            IQueryable<Document> innerQuery = MakeQuery(dto);
+
+            IEnumerable<Document> inner = innerQuery.AsEnumerable();
+
+            IQueryable<Document> outterQuery = MakeQuery(dto);
+
+            outterQuery = outterQuery.GroupBy(d => new { d.ISIN, d.Language })
+                .Select(group => new {
+                    ISIN = group.Key.ISIN,
+                    Language = group.Key.Language,
+                    MaxDocDate = group.Max(d => d.DocDate)
+                }).Join(
+                    inner,
+                    maxDates => new { isin = maxDates.ISIN, lang = maxDates.Language, date = maxDates.MaxDocDate },
+                    document => new { isin = document.ISIN, lang = document.Language, date = document.DocDate },
+                    (m, d) => d
+                );
+            return outterQuery;
+        }
+
         public async Task<byte[]> GetZipBytesArray(GetFileDto dto)
         {
             try {
