@@ -78,21 +78,19 @@
             downloadAll(){
                 let first = true;
                 const urlParams = new URLSearchParams(window.location.search);
-                let params;
+                let params = '';
                 for (let key of urlParams.keys()) {
                     if (urlParams.has(key)) {
                         if (first) {
                             first = false;
-                            params = '?' + key + '=' +urlParams.get(key);
-                            downlaodVm.url += params
+                            params += '?' + key + '=' +urlParams.get(key);
                         } else {
-                            params = '&' + key + '=' + urlParams.get(key);
-                            downlaodVm.url += params
+                            params += '&' + key + '=' + urlParams.get(key);
                         } 
                     }
                 }
                 const link = document.createElement('a');
-                link.setAttribute('href', window.location.origin + downlaodVm.url);
+                link.setAttribute('href', window.location.origin + downlaodVm.url + params);
                 link.setAttribute('target', '_blank');
 
                 link.click();
