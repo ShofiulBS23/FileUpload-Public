@@ -22,7 +22,7 @@
         <ul>
             @{
                 foreach(var item in Model) {
-                    string url = $"/Home/GetFileOrView?clientId={Uri.EscapeDataString(item.ClientId)}&docGroup={Uri.EscapeDataString(item.DocGroup)}&isin={Uri.EscapeDataString(item.Isin)}&lang={Uri.EscapeDataString(item.Language)}";
+                    string url = $"/Home/GetDocument?clientId={Uri.EscapeDataString(item.ClientId)}&docGroup={Uri.EscapeDataString(item.DocGroup)}&isin={Uri.EscapeDataString(item.Isin)}&lang={Uri.EscapeDataString(item.Language)}";
 
                     string fileName = $"{item.Isin}_{item.Language}_{item.DocGroup}.{item.DocExt}";
                                 <li>
