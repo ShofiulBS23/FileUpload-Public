@@ -330,18 +330,6 @@ namespace File_Public.Services.Implementation
                 query = query.Where(d => d.DocGroup == dto.DocGroup);
             }
 
-            if (!dto.DocName.IsNullOrEmpty()) {
-                query = query.Where(d => d.DocName == dto.DocName);
-            }
-
-            if (!dto.DocExt.IsNullOrEmpty()) {
-                query = query.Where(d => d.DocExt == dto.DocExt);
-            }
-
-            if (dto.DocDate.HasValue) {
-                query = query.Where(d => d.DocDate == dto.DocDate);
-            }
-
             return query;
         }
     }
